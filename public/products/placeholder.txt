@@ -1,0 +1,32 @@
+# Product Images Placeholder
+
+This directory contains product images for NusantaraHax gaming tools.
+
+## Required Images:
+- mlbb-pro-1.jpg (Mobile Legends Pro Hack screenshot)
+- mlbb-pro-2.jpg (Mobile Legends Pro Hack features)
+- mlbb-pro-3.jpg (Mobile Legends Pro Hack interface)
+- pubgm-elite-1.jpg (PUBG Mobile Elite ESP screenshot)
+- pubgm-elite-2.jpg (PUBG Mobile Elite ESP features)
+- pubgm-elite-3.jpg (PUBG Mobile Elite ESP interface)
+- dfm-premium-1.jpg (DFM Premium Mod screenshot)
+- dfm-premium-2.jpg (DFM Premium Mod features)
+- dfm-premium-3.jpg (DFM Premium Mod interface)
+- mlbb-booster-1.jpg (MLBB Rank Booster screenshot)
+- mlbb-booster-2.jpg (MLBB Rank Booster features)
+- pubgm-aimbot-1.jpg (PUBGM Aimbot Pro screenshot)
+- pubgm-aimbot-2.jpg (PUBGM Aimbot Pro features)
+- dfm-auto-1.jpg (DFM Auto Battle screenshot)
+- dfm-auto-2.jpg (DFM Auto Battle features)
+
+## Image Specifications:
+- Format: JPG/PNG
+- Aspect Ratio: 16:9 (recommended)
+- Resolution: 1920x1080 (minimum)
+- File Size: < 500KB (optimized for web)
+
+## Placeholder Images:
+For development, you can use placeholder images from:
+- https://picsum.photos/1920/1080 (random images)
+- https://via.placeholder.com/1920x1080 (solid color placeholders)
+- Gaming-themed stock photos from Unsplash

@@ -1,0 +1,20 @@
+# Avatar Images Placeholder
+
+This directory contains user avatar images for testimonials.
+
+## Required Avatars:
+- user1.jpg (Ahmad Rizki avatar)
+- user2.jpg (Sari Dewi avatar)  
+- user3.jpg (Budi Santoso avatar)
+
+## Image Specifications:
+- Format: JPG/PNG
+- Aspect Ratio: 1:1 (square)
+- Resolution: 400x400 (minimum)
+- File Size: < 100KB
+
+## Placeholder Avatars:
+For development, you can use:
+- https://i.pravatar.cc/400 (random avatars)
+- https://via.placeholder.com/400x400 (solid color placeholders)
+- Default avatar fallback with user initials
