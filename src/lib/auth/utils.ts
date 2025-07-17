@@ -55,6 +55,7 @@ export async function createUser(data: {
   email: string
   name: string
   password: string
+  role?: 'USER' | 'ADMIN'
 }) {
   const existingUser = await prisma.user.findUnique({
     where: { email: data.email },
@@ -65,13 +66,16 @@ export async function createUser(data: {
   }
 
   const hashedPassword = await hash(data.password, 12)
+  const userRole = data.role || 'USER'
 
   const user = await prisma.user.create({
     data: {
       email: data.email,
       name: data.name,
       password: hashedPassword,
-      role: 'USER',
+      role: userRole,
+      // Auto-verify admin emails
+      emailVerified: userRole === 'ADMIN' ? new Date() : null,
     },
     select: {
       id: true,
@@ -82,13 +86,15 @@ export async function createUser(data: {
     },
   })
 
-  // Send email verification
-  try {
-    const { sendEmailVerification } = await import('@/lib/email/email-service')
-    await sendEmailVerification(user.id, user.email, user.name)
-  } catch (emailError) {
-    console.error('Failed to send verification email:', emailError)
-    // Don't fail registration if email fails
+  // Send email verification only for non-admin users
+  if (userRole !== 'ADMIN') {
+    try {
+      const { sendEmailVerification } = await import('@/lib/email/email-service')
+      await sendEmailVerification(user.id, user.email, user.name)
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError)
+      // Don't fail registration if email fails
+    }
   }
 
   // Log security activity

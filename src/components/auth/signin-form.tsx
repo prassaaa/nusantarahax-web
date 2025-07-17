@@ -68,8 +68,8 @@ export function SignInForm({ callbackUrl, error: urlError }: SignInFormProps) {
       if (userCheckResponse.ok) {
         const userData = await userCheckResponse.json()
 
-        // Check if email is verified
-        if (!userData.emailVerified) {
+        // Check if email is verified (skip for admin users)
+        if (!userData.emailVerified && userData.role !== 'ADMIN') {
           updateState({
             requiresEmailVerification: true,
             step: 'email-verification',

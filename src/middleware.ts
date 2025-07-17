@@ -32,6 +32,11 @@ export default withAuth(
     const isAuthenticated = !!token
     const isAdmin = token?.role === 'ADMIN'
 
+    // Allow create-admin endpoint for initial setup
+    if (pathname === '/api/admin/create-admin') {
+      return NextResponse.next()
+    }
+
     // Handle public routes - redirect authenticated users to dashboard
     if (publicRoutes.some(route => pathname.startsWith(route))) {
       if (isAuthenticated) {
@@ -82,6 +87,9 @@ export default withAuth(
 
         // Always allow NextAuth API routes
         if (pathname.startsWith('/api/auth/')) return true
+
+        // Allow create-admin endpoint for initial setup
+        if (pathname === '/api/admin/create-admin') return true
 
         // Allow public pages
         if (pathname === '/') return true
