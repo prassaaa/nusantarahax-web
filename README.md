@@ -1,5 +1,7 @@
 # 🎮 NusantaraHax - Premium Gaming Tools Website
 
+![NusantaraHax](images/nusantarahax.png)
+
 A modern, responsive website for NusantaraHax gaming tools built with Next.js 15, featuring a stunning red-white theme, smooth animations, and premium user experience.
 
 ## ✨ Features
