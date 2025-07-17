@@ -11,6 +11,7 @@ export function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount)
 }
 
@@ -24,29 +25,35 @@ export function formatDate(date: Date | string): string {
   }).format(dateObj)
 }
 
-// Generate random string for license keys
-export function generateLicenseKey(length: number = 16): string {
+// Generate license key in format XXXX-XXXX-XXXX-XXXX
+export function generateLicenseKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
+  const segments = []
+
+  for (let i = 0; i < 4; i++) {
+    let segment = ''
+    for (let j = 0; j < 4; j++) {
+      segment += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    segments.push(segment)
   }
-  return result.match(/.{1,4}/g)?.join('-') || result
+
+  return segments.join('-')
+}
+
+// Generate slug from string
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }
 
 // Validate email format
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
-}
-
-// Generate slug from string
-export function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 // Truncate text with ellipsis

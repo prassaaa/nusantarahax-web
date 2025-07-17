@@ -53,7 +53,22 @@ A modern, responsive website for NusantaraHax gaming tools built with Next.js 15
    pnpm install
    ```
 
-3. **Run the development server**
+3. **Setup Database (MySQL)**
+   ```bash
+   # Create MySQL database
+   mysql -u root -p -e "CREATE DATABASE nusantarahax CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+   # Configure environment variables
+   cp .env.example .env
+   # Edit .env and update DATABASE_URL with your MySQL credentials
+
+   # Setup database schema
+   npm run db:generate
+   npm run db:push
+   npm run db:seed
+   ```
+
+4. **Run the development server**
    ```bash
    npm run dev
    # or
@@ -62,7 +77,7 @@ A modern, responsive website for NusantaraHax gaming tools built with Next.js 15
    pnpm dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
@@ -163,10 +178,12 @@ npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
 
-# Database (when implemented)
+# Database Operations
 npm run db:generate  # Generate Prisma client
-npm run db:push      # Push schema to database
-npm run db:migrate   # Run database migrations
+npm run db:push      # Push schema to database (development)
+npm run db:migrate   # Run database migrations (production)
+npm run db:seed      # Populate database with sample data
+npm run db:studio    # Open Prisma Studio (database GUI)
 ```
 
 ### Code Style

@@ -2,19 +2,32 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSession, signOut } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X, ShoppingCart, User } from 'lucide-react'
+import { Menu, X, ShoppingCart, User, LogOut, Settings, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useCart } from '@/hooks/use-cart'
 import { NAV_ITEMS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
+import { CartButton } from '@/components/cart/cart-button'
+import { NotificationBell } from '@/components/notifications/notification-bell'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { getCartItemsCount } = useCart()
+  const { data: session, status } = useSession()
 
-  const cartItemsCount = getCartItemsCount()
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' })
+  }
 
   return (
     <motion.header
@@ -63,28 +76,73 @@ export function Header() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Cart Button */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="ghost" size="sm" className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {cartItemsCount > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                  >
-                    {cartItemsCount}
-                  </Badge>
-                )}
-              </Button>
-            </motion.div>
+            {/* Notifications */}
+            <NotificationBell />
 
-            {/* Login Button */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button size="sm" className="gradient-button text-white border-0">
-                <User className="h-4 w-4 mr-2" />
-                Login
-              </Button>
-            </motion.div>
+            {/* Cart Button */}
+            <CartButton />
+
+            {/* User Authentication */}
+            <div suppressHydrationWarning>
+              {status === 'loading' || typeof window === 'undefined' ? (
+                <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              ) : session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      {session.user.avatar ? (
+                        <AvatarImage
+                          src={session.user.avatar}
+                          alt={session.user.name || 'User'}
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                        {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{session.user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {session.user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">
+                      <Package className="mr-2 h-4 w-4" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button size="sm" className="gradient-button text-white border-0" asChild>
+                  <Link href="/auth/signin">
+                    <User className="h-4 w-4 mr-2" />
+                    Login
+                  </Link>
+                </Button>
+              </motion.div>
+              )}
+            </div>
 
             {/* Mobile Menu Button */}
             <Button

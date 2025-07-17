@@ -1,0 +1,486 @@
+// NusantaraHax Database Schema
+// Gaming tools e-commerce platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+  REVOKED
+}
+
+enum PaymentMethod {
+  DUITKU_VA
+  DUITKU_EWALLET
+  DUITKU_QRIS
+  DUITKU_CREDIT_CARD
+}
+
+// User Management
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String
+  password          String?
+  emailVerified     DateTime?
+  image             String?
+  avatar            String?
+  role              Role      @default(USER)
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorSecret   String?
+  backupCodes       String?   // JSON array of backup codes
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  orders            Order[]
+  licenses          License[]
+  reviews           Review[]
+  preferences       UserPreferences?
+  verificationTokens UserVerificationToken[]
+  securityLogs      SecurityLog[]
+  cart              Cart?
+  supportTickets    SupportTicket[]
+  ticketMessages    TicketMessage[]
+  notifications     Notification[]
+  downloads         Download[]
+  createdContent    Content[] @relation("ContentCreatedBy")
+  updatedContent    Content[] @relation("ContentUpdatedBy")
+  createdSettings   Setting[] @relation("SettingCreatedBy")
+  updatedSettings   Setting[] @relation("SettingUpdatedBy")
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  emailNotifications Boolean  @default(true)
+  orderUpdates       Boolean  @default(true)
+  marketingEmails    Boolean  @default(false)
+  securityAlerts     Boolean  @default(true)
+  twoFactorAuth      Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model UserVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  type      TokenType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_verification_tokens")
+}
+
+model SecurityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("security_logs")
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  TWO_FACTOR_SETUP
+  TWO_FACTOR_BACKUP
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Product Management
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?   @db.Text
+  icon        String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  description      String   @db.Text
+  shortDescription String   @db.Text
+  price            Int      // Price in cents/rupiah
+  originalPrice    Int?     // Original price for discounts
+  categoryId       String
+  features         Json     // Array of features
+  images           Json     // Array of image URLs
+  isActive         Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  downloadUrl      String?
+  version          String
+  compatibility    Json     // Array of compatible platforms
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+  licenses   License[]
+  reviews    Review[]
+  downloads  Download[]
+
+  @@map("products")
+}
+
+// Order Management
+model Order {
+  id            String        @id @default(cuid())
+  userId        String
+  status        OrderStatus   @default(PENDING)
+  total         Int           // Total amount in cents/rupiah
+  paymentMethod PaymentMethod
+  paymentId     String?       // External payment ID from Duitku
+  paymentData   Json?         // Additional payment data
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int      @default(1)
+  price     Int      // Price at time of purchase
+  createdAt DateTime @default(now())
+
+  // Relations
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// License Management
+model License {
+  id         String        @id @default(cuid())
+  userId     String
+  productId  String
+  licenseKey String        @unique
+  status     LicenseStatus @default(ACTIVE)
+  expiresAt  DateTime?     // Null for lifetime licenses
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id])
+  product   Product    @relation(fields: [productId], references: [id])
+  downloads Download[]
+
+  @@map("licenses")
+}
+
+// Review System
+model Review {
+  id         String   @id @default(cuid())
+  userId     String
+  productId  String
+  rating     Int      // 1-5 stars
+  comment    String   @db.Text
+  isVerified Boolean  @default(false) // Verified purchase
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId]) // One review per user per product
+  @@map("reviews")
+}
+
+// Shopping Cart System
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId]) // One item per product per cart
+  @@map("cart_items")
+}
+
+// Content Management System
+model Content {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  title       String
+  content     String   @db.LongText
+  type        ContentType @default(TEXT)
+  category    String?
+  isPublished Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  updatedById String
+
+  // Relations
+  createdBy User @relation("ContentCreatedBy", fields: [createdById], references: [id])
+  updatedBy User @relation("ContentUpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("content")
+}
+
+enum ContentType {
+  TEXT
+  HTML
+  JSON
+  IMAGE
+}
+
+// Settings Management
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  type        SettingType @default(STRING)
+  category    String   @default("general")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+  updatedById String
+
+  // Relations
+  createdBy User @relation("SettingCreatedBy", fields: [createdById], references: [id])
+  updatedBy User @relation("SettingUpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("settings")
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+// Support System
+model SupportTicket {
+  id          String        @id @default(cuid())
+  userId      String
+  subject     String
+  description String        @db.Text
+  status      TicketStatus  @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  category    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  user     User           @relation(fields: [userId], references: [id])
+  messages TicketMessage[]
+
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id       String   @id @default(cuid())
+  ticketId String
+  userId   String
+  message  String   @db.Text
+  isStaff  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id])
+
+  @@map("ticket_messages")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Notification System
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String           @db.Text
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  data      Json?            // Additional notification data
+  createdAt DateTime         @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  ORDER_UPDATE
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  LICENSE_EXPIRY
+  SYSTEM_MAINTENANCE
+}
+
+// Email Templates
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  subject     String
+  htmlContent String   @db.LongText
+  textContent String?  @db.LongText
+  variables   Json?    // Available template variables
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("email_templates")
+}
+
+// Download Tracking
+model Download {
+  id         String   @id @default(cuid())
+  userId     String
+  productId  String
+  licenseId  String
+  ipAddress  String?
+  userAgent  String?
+  downloadedAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  license License @relation(fields: [licenseId], references: [id])
+
+  @@map("downloads")
+}

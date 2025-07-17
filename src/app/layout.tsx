@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import "./globals.css";
 import { SITE_CONFIG } from "@/lib/constants";
+import { ClientOnly } from "@/components/common/client-only";
+import { HydrationSafeBody } from "@/components/common/hydration-safe-body";
+import { HydrationProvider } from "@/components/providers/hydration-provider";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,6 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_CONFIG.url),
   title: {
     default: SITE_CONFIG.name,
     template: `%s | ${SITE_CONFIG.name}`,
@@ -70,12 +76,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
+    <html lang="en" suppressHydrationWarning>
+      <HydrationSafeBody
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-      </body>
+        <HydrationProvider>
+          <ClientOnly>
+            <AuthProvider>
+              {children}
+              <Toaster
+                position="top-right"
+                richColors
+                closeButton
+                duration={4000}
+              />
+            </AuthProvider>
+          </ClientOnly>
+        </HydrationProvider>
+      </HydrationSafeBody>
     </html>
   );
 }

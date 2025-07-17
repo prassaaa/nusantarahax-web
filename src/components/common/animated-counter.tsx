@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
 
 interface AnimatedCounterProps {
   end: number
@@ -12,7 +11,7 @@ interface AnimatedCounterProps {
   className?: string
 }
 
-export function AnimatedCounter({
+export const AnimatedCounter = memo(function AnimatedCounter({
   end,
   duration = 2,
   prefix = '',
@@ -20,36 +19,52 @@ export function AnimatedCounter({
   className = ''
 }: AnimatedCounterProps) {
   const [count, setCount] = useState(0)
+  const [isClient, setIsClient] = useState(false)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
 
+  // Ensure client-side rendering
   useEffect(() => {
-    if (!isInView) return
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isInView || !isClient) return
 
     let startTime: number
     let animationFrame: number
+    let isMounted = true
 
     const animate = (currentTime: number) => {
+      if (!isMounted) return
+
       if (!startTime) startTime = currentTime
       const progress = Math.min((currentTime - startTime) / (duration * 1000), 1)
-      
+
       // Easing function for smooth animation
       const easeOutQuart = 1 - Math.pow(1 - progress, 4)
-      setCount(Math.floor(easeOutQuart * end))
+      const newCount = Math.floor(easeOutQuart * end)
 
-      if (progress < 1) {
+      if (isMounted) {
+        setCount(newCount)
+      }
+
+      if (progress < 1 && isMounted) {
         animationFrame = requestAnimationFrame(animate)
       }
     }
 
-    animationFrame = requestAnimationFrame(animate)
+    if (end > 0) {
+      animationFrame = requestAnimationFrame(animate)
+    }
 
     return () => {
+      isMounted = false
       if (animationFrame) {
         cancelAnimationFrame(animationFrame)
       }
     }
-  }, [end, duration, isInView])
+  }, [end, duration, isInView, isClient])
 
   return (
     <motion.span
@@ -58,8 +73,9 @@ export function AnimatedCounter({
       animate={isInView ? { opacity: 1, scale: 1 } : {}}
       transition={{ duration: 0.5 }}
       className={className}
+      suppressHydrationWarning
     >
-      {prefix}{count.toLocaleString()}{suffix}
+      {prefix}{isClient ? count.toLocaleString() : '0'}{suffix}
     </motion.span>
   )
-}
+})

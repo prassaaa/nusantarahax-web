@@ -4,7 +4,10 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Play, Shield, Zap, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AnimatedCounter } from '@/components/common/animated-counter'
+import { NoSSR } from '@/components/common/no-ssr'
 import { ANIMATIONS } from '@/lib/constants'
+import Lottie from 'lottie-react'
+import heroAnimation from '@/assets/hero.json'
 
 const stats = [
   { icon: Users, label: 'Active Users', value: 50000, suffix: '+' },
@@ -128,11 +131,13 @@ export function HeroSection() {
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
-                    <AnimatedCounter
-                      end={stat.value}
-                      suffix={stat.suffix}
-                      duration={2}
-                    />
+                    <NoSSR fallback={<span>0{stat.suffix}</span>}>
+                      <AnimatedCounter
+                        end={stat.value}
+                        suffix={stat.suffix}
+                        duration={2}
+                      />
+                    </NoSSR>
                   </div>
                   <div className="text-sm text-gray-600">{stat.label}</div>
                 </motion.div>
@@ -148,20 +153,20 @@ export function HeroSection() {
             className="relative"
           >
             <div className="relative">
-              {/* Main Hero Visual */}
+              {/* Main Hero Visual - Lottie Animation */}
               <motion.div
                 animate={{ y: [-5, 5, -5] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 className="relative z-10"
               >
-                <div className="w-full max-w-lg mx-auto aspect-square rounded-3xl gradient-hero p-8 shadow-2xl">
-                  <div className="w-full h-full rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <div className="text-6xl font-bold mb-4">🎮</div>
-                      <div className="text-2xl font-bold mb-2">NusantaraHax</div>
-                      <div className="text-white/80">Premium Gaming Tools</div>
-                    </div>
-                  </div>
+                <div className="w-full max-w-lg mx-auto aspect-square flex items-center justify-center">
+                  <Lottie
+                    animationData={heroAnimation}
+                    loop={true}
+                    autoplay={true}
+                    className="w-full h-full"
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                  />
                 </div>
               </motion.div>
 

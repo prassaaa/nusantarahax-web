@@ -75,6 +75,7 @@ export interface CartItem {
   productId: string;
   quantity: number;
   product: Product;
+  addedAt: string;
 }
 
 export interface Testimonial {

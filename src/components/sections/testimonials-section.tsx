@@ -12,17 +12,26 @@ import { getInitials } from '@/lib/utils'
 export function TestimonialsSection() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [isClient, setIsClient] = useState(false)
+
+  // Ensure client-side rendering
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Auto-play functionality
   useEffect(() => {
-    if (!isAutoPlaying) return
+    if (!isAutoPlaying || !isClient) return
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % TESTIMONIALS.length)
+      setCurrentIndex((prev) => {
+        const next = (prev + 1) % TESTIMONIALS.length
+        return next
+      })
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [isAutoPlaying])
+  }, [isAutoPlaying, isClient]) // Keep dependency array stable
 
   const nextTestimonial = () => {
     setCurrentIndex((prev) => (prev + 1) % TESTIMONIALS.length)

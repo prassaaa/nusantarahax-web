@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 export function useLocalStorage<T>(key: string, initialValue: T) {
   // State to store our value
   const [storedValue, setStoredValue] = useState<T>(initialValue)
+  const [isClient, setIsClient] = useState(false)
 
   // Return a wrapped version of useState's setter function that persists the new value to localStorage
   const setValue = (value: T | ((val: T) => T)) => {
@@ -22,20 +23,21 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }
   }
 
-  // Get from local storage then parse stored json or return initialValue
+  // Initialize client-side state
   useEffect(() => {
+    setIsClient(true)
     try {
       if (typeof window !== 'undefined') {
         const item = window.localStorage.getItem(key)
         if (item) {
-          setStoredValue(JSON.parse(item))
+          const parsedValue = JSON.parse(item)
+          setStoredValue(parsedValue)
         }
       }
     } catch (error) {
       console.error(`Error reading from localStorage:`, error)
-      setStoredValue(initialValue)
     }
-  }, [key, initialValue])
+  }, [key])
 
-  return [storedValue, setValue] as const
+  return [isClient ? storedValue : initialValue, setValue] as const
 }

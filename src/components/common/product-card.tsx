@@ -3,11 +3,11 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Star, ShoppingCart, Check } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { useCart } from '@/hooks/use-cart'
+import { AddToCartButton } from '@/components/cart/add-to-cart-button'
 import { formatCurrency, calculateDiscount } from '@/lib/utils'
 import { ANIMATIONS } from '@/lib/constants'
 import type { Product } from '@/types'
@@ -15,16 +15,11 @@ import type { Product } from '@/types'
 interface ProductCardProps {
   product: Product
   index?: number
+  compact?: boolean
 }
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { addToCart, isInCart } = useCart()
-  const isProductInCart = isInCart(product.id)
+export function ProductCard({ product, index = 0, compact = false }: ProductCardProps) {
   const discount = product.originalPrice ? calculateDiscount(product.originalPrice, product.price) : 0
-
-  const handleAddToCart = () => {
-    addToCart(product)
-  }
 
   return (
     <motion.div
@@ -136,19 +131,12 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 View Details
               </Link>
             </Button>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="sm"
-                onClick={handleAddToCart}
-                disabled={isProductInCart}
-                className={`gradient-button text-white border-0 ${
-                  isProductInCart ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                {isProductInCart ? 'In Cart' : 'Add to Cart'}
-              </Button>
-            </motion.div>
+            <AddToCartButton
+              productId={product.id}
+              productName={product.name}
+              size="sm"
+              className="gradient-button text-white border-0"
+            />
           </div>
         </CardFooter>
       </Card>
