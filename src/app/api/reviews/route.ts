@@ -5,11 +5,11 @@ import { prisma } from '@/lib/db/prisma'
 import { z } from 'zod'
 
 const getReviewsSchema = z.object({
-  productId: z.string().optional(),
-  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val) : 10),
-  rating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
-  verified: z.string().optional().transform(val => val === 'true')
+  productId: z.string().nullable().optional(),
+  page: z.string().nullable().optional().transform(val => val ? parseInt(val) : 1),
+  limit: z.string().nullable().optional().transform(val => val ? parseInt(val) : 10),
+  rating: z.string().nullable().optional().transform(val => val ? parseInt(val) : undefined),
+  verified: z.string().nullable().optional().transform(val => val === 'true')
 })
 
 // Get reviews
